@@ -36,6 +36,8 @@
 
 ## البدء السريع
 
+</div>
+
 ```powershell
 # 1) تثبيت الأدوات المحمولة (Node + Python venv) — مرة واحدة
 .\scripts\setup.ps1
@@ -43,6 +45,8 @@
 # 2) تشغيل التطبيق
 .\scripts\run.ps1
 ```
+
+<div dir="rtl" align="right">
 
 أو بالنقر المزدوج على Windows: `scripts\setup.bat` ثم `scripts\run.bat`
 (و`scripts\stop.bat` للإيقاف).
@@ -77,6 +81,8 @@
 
 ## بنية المشروع
 
+</div>
+
 ```
 alsrory-ai/
 ├─ apps/web/            # واجهة Next.js 15 (عربي RTL)
@@ -88,6 +94,8 @@ alsrory-ai/
 ├─ scripts/             # التثبيت والتشغيل (PowerShell + .bat)
 └─ data/                # مشاريعك وملفاتك (غير مرفوعة إلى Git)
 ```
+
+<div dir="rtl" align="right">
 
 ## الوثائق
 
