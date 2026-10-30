@@ -1,5 +1,9 @@
 # alsrory.AI
 
+[![CodeQL](https://github.com/alsroryye-lgtm/alsrory-ai/actions/workflows/codeql.yml/badge.svg)](https://github.com/alsroryye-lgtm/alsrory-ai/actions/workflows/codeql.yml)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
+[![Local-first](https://img.shields.io/badge/local--first-100%25-success.svg)](#)
+
 > استوديو فيديو بالذكاء الاصطناعي — مفتوح المصدر، مجاني، ويعمل على جهازك.
 
 **alsrory.AI** تطبيق ويب محلي (Local-first) لتوليد الفيديو بالذكاء الاصطناعي: نص إلى فيديو، صورة إلى فيديو، تحرير فيديو، أفاتار ناطق، تعليق صوتي وموسيقى، تكبير الدقة، ومونتاج كامل — كل ذلك بواجهة عربية (RTL) ومحرّك نماذج مفتوحة قابل للتبديل.

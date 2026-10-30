@@ -1,0 +1,81 @@
+version: 2
+
+updates:
+  # Web app (Next.js / React / Tailwind)
+  - package-ecosystem: npm
+    directory: "/apps/web"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:10"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(web)"
+    labels:
+      - dependencies
+    groups:
+      next-stack:
+        patterns:
+          - next
+          - react
+          - react-dom
+        update-types:
+          - minor
+          - patch
+      styles:
+        patterns:
+          - tailwindcss
+          - "@tailwindcss/*"
+        update-types:
+          - minor
+          - patch
+      tooling:
+        patterns:
+          - typescript
+          - "@types/*"
+        update-types:
+          - minor
+          - patch
+
+  # API (FastAPI / uvicorn / pytest)
+  - package-ecosystem: pip
+    directory: "/services/api"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:20"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(api)"
+    labels:
+      - dependencies
+    groups:
+      python-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  # GitHub Actions used by CodeQL and future workflows
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:30"
+      timezone: "UTC"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "ci(actions)"
+    labels:
+      - dependencies
+      - github-actions
+    groups:
+      actions-minor-patch:
+        patterns: ["*"]
+        update-types:
+          - minor
+          - patch
