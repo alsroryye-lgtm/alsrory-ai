@@ -7,7 +7,7 @@ from ..config import settings
 from ..db import get_setting
 from .base import Engine
 from .comfy import ComfyEngine
-from .hfspace import HFSpaceEngine
+from .hfspace import DEFAULT_API, HFSpaceEngine
 from .mock import MockEngine
 
 
@@ -32,11 +32,11 @@ class EngineRegistry:
             "comfy_workflow": stored.get("comfy_workflow")
             or settings.comfy_workflow,
             "hf_space_id": (
-                stored.get("hf_space_id")
-                if stored.get("hf_space_id") is not None
-                else settings.hf_space_id
+                stored.get("hf_space_id") or settings.hf_space_id
             ),
-            "hf_api_name": stored.get("hf_api_name") or settings.hf_api_name,
+            "hf_api_name": (
+                stored.get("hf_api_name") or settings.hf_api_name
+            ),
         }
 
     def refresh(self) -> None:
@@ -51,7 +51,7 @@ class EngineRegistry:
         }
         if cfg["hf_space_id"]:
             self._engines["hfspace"] = HFSpaceEngine(
-                cfg["hf_space_id"], cfg["hf_api_name"] or "/generate"
+                cfg["hf_space_id"], cfg["hf_api_name"] or DEFAULT_API
             )
         self.default_id = cfg["default_engine"]
         if self.default_id not in self._engines:

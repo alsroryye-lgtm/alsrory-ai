@@ -1,11 +1,20 @@
 from __future__ import annotations
 
 import asyncio
+import os
+import shutil
+import threading
+import time
 import uuid
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from .base import EngineArtifact, EngineHealth, EngineJob, EngineProgress
+
+DEFAULT_SPACE = "Lightricks/ltx-video-distilled"
+DEFAULT_API = "/text_to_video"
+DEFAULT_NEGATIVE = "worst quality, inconsistent motion, blurry, jittery, distorted"
 
 _MIME = {
     ".mp4": "video/mp4",
@@ -20,117 +29,246 @@ _MIME = {
 }
 
 
-class HFSpaceEngine:
-    """Experimental adapter for public Hugging Face Spaces (Gradio API).
+@dataclass
+class _HFJob:
+    job: EngineJob
+    state: str = "running"
+    progress: float = 0.05
+    message: str = "تحضير الطلب…"
+    error: str | None = None
+    result: Path | None = None
+    started: float = field(default_factory=time.time)
+    cancel: threading.Event = field(default_factory=threading.Event)
+    thread: threading.Thread | None = None
 
-    Space signatures differ, so the caller supplies positional arguments in
-    ``params.extra.hf_args`` (or the sensible default below). Expect queues and
-    quotas; this is a fallback, not the primary engine.
+
+def _clamp_size(value: int) -> int:
+    """LTX wants multiples of 32 within 256..1280."""
+    return max(256, min(1280, int(round(value / 32.0)) * 32))
+
+
+class HFSpaceEngine:
+    """Keyless adapter for public Hugging Face Spaces (Gradio API).
+
+    The default Space runs LTX-Video (distilled) on ZeroGPU: it needs no API
+    key, but the prompt/image leaves your machine and anonymous GPU quotas
+    apply. Swap ``hf_space_id`` / ``hf_api_name`` for any Space exposing a
+    compatible signature.
     """
 
     id = "hfspace"
-    label = "Hugging Face Space (تجريبي)"
-    capabilities = set({"text2video", "image2video"})
+    label = "Hugging Face — مجاني بلا مفتاح"
+    capabilities = {"text2video", "image2video"}
 
-    def __init__(self, space_id: str, api_name: str = "/generate") -> None:
-        self.space_id = space_id.strip()
-        self.api_name = api_name.strip() or "/generate"
-        self._results: dict[str, Any] = {}
-        self._errors: dict[str, str] = {}
+    def __init__(
+        self,
+        space_id: str = DEFAULT_SPACE,
+        api_name: str = DEFAULT_API,
+        token: str = "",
+    ) -> None:
+        self.space_id = (space_id or DEFAULT_SPACE).strip()
+        self.api_name = (api_name or DEFAULT_API).strip()
+        self.token = (token or os.getenv("HF_TOKEN", "")).strip()
+        self._jobs: dict[str, _HFJob] = {}
+        self._lock = threading.Lock()
+        self._health: tuple[float, EngineHealth] | None = None
 
+    # ------------------------------------------------------------------ helpers
     def _client(self):
         try:
             from gradio_client import Client  # type: ignore
-        except ImportError as exc:  # pragma: no cover
+        except ImportError as exc:  # pragma: no cover - dependency guard
             raise RuntimeError(
-                "حزمة gradio_client غير مثبّتة. نفّذ: pip install gradio_client"
+                "مكتبة gradio_client غير مثبتة. شغّل: pip install -r services/api/requirements.txt"
             ) from exc
-        return Client(self.space_id)
+        return Client(self.space_id, token=self.token or None, verbose=False)
 
+    def _predict_args(self, job: EngineJob) -> dict[str, Any]:
+        mode = "image-to-video" if job.type == "image2video" else "text-to-video"
+        duration = job.frames / max(1, job.fps)
+        return {
+            "prompt": job.prompt or "a cinematic shot",
+            "negative_prompt": job.negative_prompt or DEFAULT_NEGATIVE,
+            "input_image_filepath": str(job.image_path) if job.image_path else None,
+            "input_video_filepath": None,
+            "height_ui": _clamp_size(job.height),
+            "width_ui": _clamp_size(job.width),
+            "mode": mode,
+            "duration_ui": max(1.0, min(8.0, round(duration, 2))),
+            "ui_frames_to_use": 9,
+            "seed_ui": int(job.seed),
+            "randomize_seed": False,
+            "ui_guidance_scale": 1,
+            "improve_texture_flag": True,
+        }
+
+    def _predict(self, job: EngineJob) -> Any:
+        client = self._client()
+        extra = job.params.get("extra", {}) or {}
+        api_name = str(extra.get("hf_api_name") or self.api_name)
+
+        if api_name.endswith("/text_to_video") or api_name.endswith("/image_to_video"):
+            return client.predict(api_name=api_name, **self._predict_args(job))
+
+        args = extra.get("hf_args") or [job.prompt, job.negative_prompt, job.seed]
+        return client.predict(*args, api_name=api_name)
+
+    @staticmethod
+    def _first_video(value: Any) -> Path | None:
+        if isinstance(value, str):
+            path = Path(value)
+            return path if path.exists() and path.is_file() else None
+        if isinstance(value, dict):
+            for key in ("video", "path", "name", "file"):
+                if key in value:
+                    found = HFSpaceEngine._first_video(value[key])
+                    if found:
+                        return found
+            for item in value.values():
+                found = HFSpaceEngine._first_video(item)
+                if found:
+                    return found
+        if isinstance(value, (list, tuple)):
+            for item in value:
+                found = HFSpaceEngine._first_video(item)
+                if found:
+                    return found
+        return None
+
+    def _run(self, state: _HFJob) -> None:
+        job = state.job
+        try:
+            state.message = "الاتصال بفضاء Hugging Face…"
+            state.progress = 0.12
+            result = self._predict(job)
+            state.progress = 0.92
+            state.message = "تنزيل الناتج…"
+
+            produced = self._first_video(result)
+            if produced is None:
+                raise RuntimeError(
+                    "أعاد الفضاء نتيجة بلا ملف فيديو — تحقّق من نوع المهمة أو الـ API"
+                )
+
+            job.output_dir.mkdir(parents=True, exist_ok=True)
+            suffix = produced.suffix or ".mp4"
+            target = job.output_dir / f"hf{suffix}"
+            if produced.resolve() != target.resolve():
+                if produced.parent.resolve() == job.output_dir.resolve():
+                    target = produced
+                else:
+                    shutil.move(str(produced), str(target))
+
+            state.result = target
+            state.progress = 1.0
+            state.state = "completed"
+            state.message = "اكتمل التوليد"
+        except Exception as exc:
+            state.state = "failed"
+            state.error = str(exc)
+            state.message = "فشل التوليد"
+
+    # ------------------------------------------------------------------- engine
     async def health(self) -> EngineHealth:
         if not self.space_id:
-            return EngineHealth(
-                ready=False, detail="أضف معرّف Space في الإعدادات (user/space-name)"
-            )
+            return EngineHealth(ready=False, detail="لم يُضبط فضاء Hugging Face")
+
+        now = time.time()
+        if self._health and now - self._health[0] < 120:
+            return self._health[1]
+
+        started = time.perf_counter()
+
+        def _probe() -> None:
+            self._client().view_api(print_info=False, return_format="dict")
+
         try:
-            await asyncio.wait_for(
-                asyncio.to_thread(lambda: self._client().view_api()), timeout=25
+            await asyncio.wait_for(asyncio.to_thread(_probe), timeout=45)
+            latency = int((time.perf_counter() - started) * 1000)
+            health = EngineHealth(
+                ready=True, detail=f"الفضاء جاهز: {self.space_id}", latency_ms=latency
             )
-            return EngineHealth(ready=True, detail=f"Space متاح: {self.space_id}")
         except Exception as exc:
-            return EngineHealth(ready=False, detail=f"تعذّر الاتصال: {exc}")
+            health = EngineHealth(
+                ready=False, detail=f"تعذّر الوصول إلى الفضاء: {exc}"
+            )
+        self._health = (now, health)
+        return health
 
     async def submit(self, job: EngineJob) -> str:
         engine_job_id = f"hf_{uuid.uuid4().hex[:10]}"
-        extra = job.params.get("extra", {}) or {}
-        args = extra.get("hf_args") or [
-            job.prompt,
-            job.negative_prompt,
-            job.seed,
-        ]
-        api_name = extra.get("hf_api_name") or self.api_name
-
-        def _run() -> Any:
-            client = self._client()
-            return client.predict(*args, api_name=api_name)
-
-        try:
-            self._results[engine_job_id] = await asyncio.to_thread(_run)
-        except Exception as exc:
-            self._errors[engine_job_id] = str(exc)
+        state = _HFJob(job=job)
+        with self._lock:
+            self._jobs[engine_job_id] = state
+        state.thread = threading.Thread(
+            target=self._run,
+            args=(state,),
+            name=f"hfspace-{engine_job_id}",
+            daemon=True,
+        )
+        state.thread.start()
         return engine_job_id
 
     async def poll(self, engine_job_id: str) -> EngineProgress:
-        if engine_job_id in self._errors:
-            return EngineProgress(
-                state="failed", progress=1.0, error=self._errors.pop(engine_job_id)
-            )
-        if engine_job_id in self._results:
-            return EngineProgress(
-                state="completed", progress=1.0, message="اكتمل التوليد"
-            )
-        return EngineProgress(state="running", progress=0.35, message="يعمل على Space…")
+        state = self._jobs.get(engine_job_id)
+        if not state:
+            return EngineProgress(state="failed", error="مهمة غير معروفة")
+        if state.state == "running":
+            elapsed = time.time() - state.started
+            state.progress = max(state.progress, min(0.9, 0.12 + elapsed / 240 * 0.78))
+        return EngineProgress(
+            state=state.state,  # type: ignore[arg-type]
+            progress=round(min(1.0, max(0.0, state.progress)), 3),
+            message=state.message,
+            error=state.error,
+        )
 
     async def fetch(self, engine_job_id: str) -> list[EngineArtifact]:
-        result = self._results.get(engine_job_id)
-        if result is None:
-            raise RuntimeError("لا توجد نتيجة من Space")
+        state = self._jobs.get(engine_job_id)
+        if not state:
+            raise KeyError(engine_job_id)
+        if state.thread:
+            state.thread.join(timeout=300)
+        if not state.result or not state.result.exists():
+            raise FileNotFoundError(state.error or "لم يُنتج الفضاء ملفاً")
 
-        paths: list[Path] = []
+        width: int | None = None
+        height: int | None = None
+        duration: float | None = None
+        try:
+            import imageio_ffmpeg
 
-        def _collect(value: Any) -> None:
-            if isinstance(value, str):
-                p = Path(value)
-                if p.exists() and p.is_file():
-                    paths.append(p)
-            elif isinstance(value, (list, tuple)):
-                for item in value:
-                    _collect(item)
-            elif isinstance(value, dict):
-                for item in value.values():
-                    _collect(item)
+            reader = imageio_ffmpeg.read_frames(str(state.result))
+            meta = next(reader)
+            reader.close()
+            size = meta.get("size")
+            if size:
+                width, height = int(size[0]), int(size[1])
+            if meta.get("duration"):
+                duration = float(meta["duration"])
+        except Exception:
+            duration = min(8.0, state.job.frames / max(1, state.job.fps))
 
-        _collect(result)
-        if not paths:
-            raise RuntimeError("أعاد Space نتيجة غير قابلة للقراءة")
-
-        artifacts: list[EngineArtifact] = []
-        for path in paths[:8]:
-            suffix = path.suffix.lower()
-            kind = "video" if suffix in {".mp4", ".webm", ".gif"} else (
-                "audio" if suffix in {".wav", ".mp3"} else "image"
+        return [
+            EngineArtifact(
+                kind="video",
+                filename=f"{state.job.generation_id}{state.result.suffix or '.mp4'}",
+                path=state.result,
+                mime=_MIME.get(state.result.suffix.lower(), "video/mp4"),
+                width=width,
+                height=height,
+                duration_s=duration,
+                meta={
+                    "engine": "hfspace",
+                    "space": self.space_id,
+                    "seed": state.job.seed,
+                },
             )
-            artifacts.append(
-                EngineArtifact(
-                    kind=kind,
-                    filename=path.name,
-                    data=path.read_bytes(),
-                    mime=_MIME.get(suffix, "application/octet-stream"),
-                    meta={"engine": "hfspace", "space": self.space_id},
-                )
-            )
-        return artifacts
+        ]
 
     async def cancel(self, engine_job_id: str) -> None:
-        self._results.pop(engine_job_id, None)
-        self._errors.pop(engine_job_id, None)
+        state = self._jobs.get(engine_job_id)
+        if state:
+            state.cancel.set()
+            state.state = "canceled"
+            state.message = "أُلغيت المهمة"

@@ -53,8 +53,8 @@ ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 COMFY_URL=http://127.0.0.1:8188
 COMFY_TOKEN=
 COMFY_WORKFLOW=workers/comfy/workflows/text2video.json
-HF_SPACE_ID=
-HF_API_NAME=/generate
+HF_SPACE_ID=Lightricks/ltx-video-distilled
+HF_API_NAME=/text_to_video
 FFMPEG_PATH=
 ```
 
@@ -66,7 +66,8 @@ FFMPEG_PATH=
 | `DEFAULT_ENGINE` | `mock` أو `comfy` أو `hfspace` |
 | `COMFY_URL` | عنوان ComfyUI (محلي أو نفق Colab) |
 | `COMFY_TOKEN` | الرمز السري الذي يضيفه دفتر Colab |
-| `HF_SPACE_ID` | معرّف Space مثل `user/space-name` |
+| `HF_SPACE_ID` | فضاء Hugging Face بلا مفتاح (افتراضياً `Lightricks/ltx-video-distilled`) — اتركه فارغاً للتعطيل |
+| `HF_API_NAME` | اسم دالة الفضاء (افتراضياً `/text_to_video`) |
 | `FFMPEG_PATH` | مسار ffmpeg.exe إن لم يكن في PATH |
 
 ## توصيل ComfyUI محلي

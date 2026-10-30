@@ -77,8 +77,8 @@ class Settings:
     comfy_workflow: str = os.getenv(
         "COMFY_WORKFLOW", "workers/comfy/workflows/text2video.json"
     )
-    hf_space_id: str = os.getenv("HF_SPACE_ID", "").strip()
-    hf_api_name: str = os.getenv("HF_API_NAME", "/generate").strip()
+    hf_space_id: str = os.getenv("HF_SPACE_ID", "Lightricks/ltx-video-distilled").strip()
+    hf_api_name: str = os.getenv("HF_API_NAME", "/text_to_video").strip()
 
     # runtime-only
     ffmpeg: str | None = field(default_factory=_find_ffmpeg)

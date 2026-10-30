@@ -276,7 +276,7 @@ export default function SettingsPage() {
                   <LayersIcon size={16} />
                   Hugging Face Space
                 </div>
-                <span className="badge">تجريبي</span>
+                <span className="badge">بدون مفتاح</span>
               </div>
               <div className="stack" style={{ padding: 16 }}>
                 <div className="field">
@@ -289,7 +289,7 @@ export default function SettingsPage() {
                     dir="ltr"
                     value={settings.hf_space_id}
                     onChange={(event) => update("hf_space_id", event.target.value)}
-                    placeholder="مثال: Wan-AI/Wan2.2"
+                    placeholder="Lightricks/ltx-video-distilled"
                   />
                 </div>
                 <div className="field">
@@ -299,13 +299,22 @@ export default function SettingsPage() {
                     dir="ltr"
                     value={settings.hf_api_name}
                     onChange={(event) => update("hf_api_name", event.target.value)}
-                    placeholder="/generate"
+                    placeholder="/text_to_video"
                   />
                 </div>
                 <div className="tiny muted">
-                  يحتاج <span className="mono">pip install gradio_client</span>. الحصص
-                  والطوابير تختلف بين Spaces؛ استخدمه كخيار احتياطي.
+                  الفضاء الافتراضي <span className="mono">Lightricks/ltx-video-distilled</span>{" "}
+                  يعمل على GPU مجاني <strong>بلا أي مفتاح</strong>. يُرسل الوصف (والصورة في
+                  صورة→فيديو) إلى خدمة Hugging Face العامة، وتنطبق حصص الاستخدام المجاني.
                 </div>
+                <button
+                  className="btn btn-sm"
+                  onClick={() => test("hfspace")}
+                  disabled={testing === "hfspace"}
+                >
+                  {testing === "hfspace" ? <span className="spinner" /> : <CheckIcon size={14} />}
+                  اختبار الاتصال
+                </button>
               </div>
             </div>
           </div>

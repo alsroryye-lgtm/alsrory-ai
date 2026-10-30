@@ -64,7 +64,7 @@
 - **ComfyEngine** — يرسل Workflow JSON إلى ComfyUI (`/prompt`)، يتابع `/history`، ينزّل الناتج.
   - يدعم محلياً (`http://127.0.0.1:8188`) أو بعيداً عبر نفق Cloudflare من Colab.
   - قوالب Workflows في `workers/comfy/workflows/` مع متغيّرات `{{prompt}}` وغيرها.
-- **HFSpaceEngine** — يستدعي Space عام عبر `gradio_client` (مجاني بحدود).
+- **HFSpaceEngine** — يستدعي Space عاماً عبر `gradio_client` بلا أي مفتاح (افتراضياً LTX-Video على ZeroGPU)، ويولّد في الخلفية ثم ينقل الملف إلى مجلد المهمة.
 - **Registry** — يقرأ إعدادات المستخدم، يبني المحرّكات، ويختار الافتراضي حسب نوع المهمة.
 
 ### 4) المنفّذون — `workers/`
