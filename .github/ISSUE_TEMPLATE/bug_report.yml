@@ -1,0 +1,108 @@
+name: 🐛 تقرير خطأ
+description: أبلغ عن سلوك غير متوقع في alsrory.AI
+title: "[خطأ]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        شكراً على إبلاغك عن المشكلة! املأ الحقول التالية بأكبر قدر ممكن من الدقة.
+
+        ⚠️ **لا تضع هنا أي مفاتيح API أو رموز نفق (`X-Alsrory-Token`) أو روابط عامة لمحرّكك.** أزل المسارات الشخصية إن أمكن.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: ما الذي حدث؟
+      description: وصف واضح ومختصر للمشكلة، وماذا كنت تتوقع أن يحدث بدلاً منها.
+      placeholder: عند الضغط على «توليد» تبقى المهمة «قيد الانتظار» ولا يظهر فيديو ولا رسالة خطأ.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: خطوات إعادة الإنتاج
+      description: كيف نصل إلى المشكلة من بداية تشغيل التطبيق؟
+      value: |
+        1. افتح ...
+        2. اذهب إلى ...
+        3. اضغط ...
+        4. لاحظ ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: الجزء المتأثر
+      options:
+        - لوحة التحكم
+        - الاستوديو (التوليد)
+        - المكتبة
+        - المونتاج والتصدير
+        - الإعدادات
+        - الـ API / الخادم
+        - التثبيت والتشغيل (scripts/docs)
+        - آخر / غير متأكد
+    validations:
+      required: true
+
+  - type: dropdown
+    id: engine
+    attributes:
+      label: المحرّك المستخدم
+      options:
+        - mock — المحرّك التجريبي
+        - comfy — ComfyUI محلي
+        - comfy — عبر Colab أو Kaggle
+        - hfspace — Hugging Face Space
+        - غير معروف / لم يصل للتوليد
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: نظام التشغيل
+      placeholder: Windows 11 23H2 / Ubuntu 24.04 / macOS 15
+    validations:
+      required: true
+
+  - type: input
+    id: hardware
+    attributes:
+      label: العتاد (المعالج، الذاكرة، كرت الشاشة)
+      placeholder: Core i5-3210M، 4GB RAM، Intel HD 4000، بلا GPU
+    validations:
+      required: false
+
+  - type: input
+    id: versions
+    attributes:
+      label: الإصدارات
+      description: "ناتج `node -v` و `python --version`، وإصدار المشروع إن كان معروفاً (`git log -1 --oneline`)."
+      placeholder: Node 22.11، Python 3.12.4، commit 7ff4fe2
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: السجلات أو رسائل الخطأ
+      description: الصق هنا مخرجات نافذة الـ API أو وحدة تحكم المتصفح (F12) أو سجل المهمة.
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: تأكيدات
+      options:
+        - label: بحثت في Issues الموجودة ولم أجد مشكلة مشابهة.
+          required: true
+        - label: أزلت أي معلومات حساسة (مفاتيح، رموز، روابط نفق خاصة).
+          required: true
+        - label: جرّبت أحدث نسخة من فرع `main`.
+          required: false

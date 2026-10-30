@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 دليل التثبيت وحل المشاكل
+    url: https://github.com/alsroryye-lgtm/alsrory-ai/blob/main/docs/06-setup.ar.md
+    about: خطوات التثبيت على Windows، ومشاكل شائعة مثل PowerShell و FFmpeg والمنافذ.
+  - name: 🎮 تشغيل محرّك مجاني على Colab / Kaggle
+    url: https://github.com/alsroryye-lgtm/alsrory-ai/blob/main/docs/04-hardware-and-free-gpu.ar.md
+    about: كيف تحصل على GPU مجاني وتربطه بالتطبيق عبر النفق المحمي بالرمز.
+  - name: 💬 أسئلة ونقاشات
+    url: https://github.com/alsroryye-lgtm/alsrory-ai/discussions
+    about: للأفكار المبدئية والأسئلة التي ليست خطأً ولا طلب ميزة واضح.
+  - name: 🤝 دليل المساهمة
+    url: https://github.com/alsroryye-lgtm/alsrory-ai/blob/main/CONTRIBUTING.md
+    about: كيف تُعدّ بيئة التطوير، وما الفحوصات المطلوبة قبل إرسال PR.

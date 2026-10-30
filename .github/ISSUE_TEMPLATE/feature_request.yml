@@ -1,0 +1,79 @@
+name: ✨ طلب ميزة
+description: اقترح ميزة أو تحسيناً لـ alsrory.AI
+title: "[ميزة]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        شكراً على اقتراحك! كل ميزة في هذا المشروع يجب أن تبقى **مجانية وتعمل محلياً** قدر الإمكان، وعلى عتاد متواضع أيضاً.
+
+        قبل الإرسال، تحقّق من [خارطة الطريق](https://github.com/alsroryye-lgtm/alsrory-ai/blob/main/docs/05-roadmap.ar.md) — قد تكون الميزة مخطّطة بالفعل.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: ما المشكلة التي تحلّها هذه الميزة؟
+      description: صف الحاجة أو الإزعاج الحالي، لا الحل فقط.
+      placeholder: لا أستطيع دمج تعليق صوتي عربي مع فيديو موجود، فأضطر لاستخدام برنامج خارجي.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: الحل المقترح
+      description: كيف تتخيّل الميزة في الواجهة أو في الـ API؟
+      placeholder: زر «إضافة صوت» في التايم لاين يفتح رفع ملف MP3 أو توليد TTS، مع خفض تلقائي للموسيقى.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: المجال
+      options:
+        - توليد الفيديو (نص/صورة/فيديو)
+        - الأفاتار ونطق الشفاه
+        - الصوت والتعليق الصوتي
+        - التكبير والإصلاح
+        - المونتاج والتصدير
+        - المكتبة والمشاريع
+        - المحرّكات (ComfyUI / Colab / غيرها)
+        - الواجهة وتجربة المستخدم
+        - الأداء واستهلاك الذاكرة
+        - التوثيق
+        - آخر
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: بدائل جرّبتها
+      description: أدوات أو حلول أخرى، ولماذا لا تكفي؟
+    validations:
+      required: false
+
+  - type: dropdown
+    id: gpu
+    attributes:
+      label: هل تعمل الميزة على جهاز بلا GPU؟
+      description: مهم جداً لأن المشروع يستهدف أجهزة متواضعة، مع إمكانية استخدام Colab/Kaggle عند الحاجة.
+      options:
+        - نعم — يجب أن تعمل بالمحرّك التجريبي أو FFmpeg فقط
+        - لا — تحتاج GPU محلياً
+        - لا — يمكن أن تعمل عبر Colab/Kaggle المجاني
+        - غير متأكد
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: المساهمة
+      options:
+        - label: أستطيع المساعدة في تنفيذها (كود أو اختبار أو توثيق).
+          required: false
+        - label: قرأت خارطة الطريق وتأكدت أن الميزة غير موجودة.
+          required: false
