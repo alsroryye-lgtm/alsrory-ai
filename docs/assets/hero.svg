@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" width="1200" height="360" role="img" aria-label="alsrory.AI — استوديو فيديو بالذكاء الاصطناعي">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="0.55" stop-color="#111a33"/>
+      <stop offset="1" stop-color="#0a0f1c"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#6ee7f9"/>
+      <stop offset="0.5" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#f472b6"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16203a"/>
+      <stop offset="1" stop-color="#0d1528"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#8b5cf6" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <!-- backdrop -->
+  <rect width="1200" height="360" fill="url(#bg)"/>
+  <circle cx="930" cy="130" r="220" fill="url(#glow)"/>
+  <circle cx="250" cy="330" r="180" fill="url(#glow)" opacity="0.5"/>
+
+  <!-- faint grid -->
+  <g stroke="#8b9dc9" stroke-opacity="0.07">
+    <path d="M0 60h1200M0 120h1200M0 180h1200M0 240h1200M0 300h1200"/>
+    <path d="M60 0v360M180 0v360M300 0v360M420 0v360M540 0v360M660 0v360M780 0v360M900 0v360M1020 0v360M1140 0v360"/>
+  </g>
+
+  <!-- wordmark -->
+  <g font-family="Segoe UI, Tahoma, Arial, sans-serif">
+    <text x="86" y="150" font-size="64" font-weight="700" fill="#f4f7ff" letter-spacing="-1">alsrory<tspan fill="#6ee7f9">.AI</tspan></text>
+    <text x="88" y="200" font-size="25" fill="#a9b6d6">استوديو فيديو بالذكاء الاصطناعي — مجاني، مفتوح المصدر، ويعمل على جهازك</text>
+
+    <!-- pills -->
+    <g font-size="16" fill="#cbd5e1">
+      <rect x="88" y="234" width="176" height="38" rx="19" fill="#6ee7f9" fill-opacity="0.12" stroke="#6ee7f9" stroke-opacity="0.35"/>
+      <text x="176" y="259" text-anchor="middle">نص إلى فيديو</text>
+      <rect x="278" y="234" width="176" height="38" rx="19" fill="#8b5cf6" fill-opacity="0.14" stroke="#8b5cf6" stroke-opacity="0.4"/>
+      <text x="366" y="259" text-anchor="middle">صورة إلى فيديو</text>
+      <rect x="468" y="234" width="150" height="38" rx="19" fill="#f472b6" fill-opacity="0.12" stroke="#f472b6" stroke-opacity="0.35"/>
+      <text x="543" y="259" text-anchor="middle">أفاتار ناطق</text>
+      <rect x="632" y="234" width="150" height="38" rx="19" fill="#34d399" fill-opacity="0.12" stroke="#34d399" stroke-opacity="0.35"/>
+      <text x="707" y="259" text-anchor="middle">تكبير الدقة</text>
+    </g>
+  </g>
+
+  <!-- preview card -->
+  <g filter="url(#shadow)">
+    <rect x="820" y="72" width="300" height="216" rx="22" fill="url(#screen)" stroke="#2b3a5c"/>
+    <rect x="840" y="92" width="260" height="146" rx="12" fill="#0a1122" stroke="#233050"/>
+    <!-- film strip holes -->
+    <g fill="#1c2942">
+      <rect x="848" y="100" width="10" height="14" rx="3"/><rect x="848" y="126" width="10" height="14" rx="3"/>
+      <rect x="848" y="152" width="10" height="14" rx="3"/><rect x="848" y="178" width="10" height="14" rx="3"/>
+      <rect x="848" y="204" width="10" height="14" rx="3"/><rect x="848" y="230" width="10" height="14" rx="3"/>
+      <rect x="1082" y="100" width="10" height="14" rx="3"/><rect x="1082" y="126" width="10" height="14" rx="3"/>
+      <rect x="1082" y="152" width="10" height="14" rx="3"/><rect x="1082" y="178" width="10" height="14" rx="3"/>
+      <rect x="1082" y="204" width="10" height="14" rx="3"/><rect x="1082" y="230" width="10" height="14" rx="3"/>
+    </g>
+    <!-- play button -->
+    <circle cx="970" cy="165" r="34" fill="url(#accent)" opacity="0.9"/>
+    <path d="M960 148l30 17-30 17z" fill="#0b1020"/>
+    <!-- timeline -->
+    <g>
+      <rect x="856" y="252" width="228" height="8" rx="4" fill="#1b2740"/>
+      <rect x="856" y="252" width="150" height="8" rx="4" fill="url(#accent)"/>
+      <circle cx="1006" cy="256" r="7" fill="#f4f7ff"/>
+    </g>
+    <g font-family="Segoe UI, Tahoma, Arial, sans-serif" font-size="14" fill="#8fa3c8">
+      <text x="840" y="284">٣ مشاهد · ١٢ ثانية · 1080p</text>
+    </g>
+  </g>
+
+  <!-- accent underline -->
+  <rect x="86" y="300" width="120" height="5" rx="2.5" fill="url(#accent)"/>
+</svg>
