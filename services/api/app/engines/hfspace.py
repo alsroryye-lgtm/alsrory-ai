@@ -272,6 +272,58 @@ class HFSpaceEngine:
             state.message = "فشل التوليد"
 
     # ------------------------------------------------------------------- engine
+    async def account(self) -> dict[str, Any]:
+        """Return the Hugging Face account behind the saved token, if any."""
+        if not self.token:
+            return {
+                "connected": False,
+                "detail": "لا يوجد رمز محفوظ — التوليد يعمل بلا رمز بحصة دقيقتين يومياً.",
+            }
+
+        try:
+            import httpx
+
+            async with httpx.AsyncClient(timeout=15) as client:
+                response = await client.get(
+                    "https://huggingface.co/api/whoami-v2",
+                    headers={"Authorization": f"Bearer {self.token}"},
+                )
+        except Exception as exc:
+            return {
+                "connected": False,
+                "detail": f"تعذّر الاتصال بـ Hugging Face: {exc}",
+            }
+
+        if response.status_code == 401:
+            return {
+                "connected": False,
+                "detail": (
+                    "الرمز غير صالح أو منتهٍ — أنشئ رمزاً جديداً من "
+                    "huggingface.co/settings/tokens."
+                ),
+            }
+        if response.status_code != 200:
+            return {
+                "connected": False,
+                "detail": f"رفض Hugging Face الطلب ({response.status_code}).",
+            }
+
+        data = response.json()
+        name = data.get("name") or ""
+        plan = str(data.get("plan") or "free").replace("_", " ")
+        verified = bool(data.get("emailVerified"))
+        detail = f"مرتبط بالحساب: {name} ({plan})"
+        if not verified:
+            detail += " — البريد غير مؤكَّد"
+        return {
+            "connected": True,
+            "name": name,
+            "fullname": data.get("fullname") or "",
+            "plan": plan,
+            "email_verified": verified,
+            "detail": detail,
+        }
+
     async def health(self) -> EngineHealth:
         if not self.space_id:
             return EngineHealth(ready=False, detail="لم يُضبط فضاء Hugging Face")

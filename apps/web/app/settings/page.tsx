@@ -31,6 +31,7 @@ export default function SettingsPage() {
   const [statuses, setStatuses] = useState<Record<string, EngineStatus>>({});
   const [health, setHealth] = useState<Health | null>(null);
   const [testing, setTesting] = useState<string>("");
+  const [checking, setChecking] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<ToastState>(null);
@@ -113,6 +114,21 @@ export default function SettingsPage() {
       });
     } finally {
       setTesting("");
+    }
+  };
+
+  const checkAccount = async () => {
+    setChecking(true);
+    try {
+      const result = await api.engines.hfAccount();
+      setToast({ message: result.detail, kind: result.connected ? "ok" : "err" });
+    } catch (err) {
+      setToast({
+        message: err instanceof Error ? err.message : "تعذّر التحقّق من الحساب",
+        kind: "err",
+      });
+    } finally {
+      setChecking(false);
     }
   };
 
@@ -326,14 +342,24 @@ export default function SettingsPage() {
                   و<strong>5 دقائق</strong> مع حساب Hugging Face مجاني (رمز مجاني من{" "}
                   <span className="mono">huggingface.co/settings/tokens</span>).
                 </div>
-                <button
-                  className="btn btn-sm"
-                  onClick={() => test("hfspace")}
-                  disabled={testing === "hfspace"}
-                >
-                  {testing === "hfspace" ? <span className="spinner" /> : <CheckIcon size={14} />}
-                  اختبار الاتصال
-                </button>
+                <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+                  <button
+                    className="btn btn-sm"
+                    onClick={() => test("hfspace")}
+                    disabled={testing === "hfspace"}
+                  >
+                    {testing === "hfspace" ? <span className="spinner" /> : <CheckIcon size={14} />}
+                    اختبار الاتصال
+                  </button>
+                  <button
+                    className="btn btn-sm"
+                    onClick={checkAccount}
+                    disabled={checking}
+                  >
+                    {checking ? <span className="spinner" /> : <RefreshIcon size={14} />}
+                    تحقّق من الحساب
+                  </button>
+                </div>
               </div>
             </div>
           </div>

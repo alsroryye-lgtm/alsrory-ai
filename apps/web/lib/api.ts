@@ -126,6 +126,15 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ engine_id: engineId }),
       }),
+    hfAccount: () =>
+      request<{
+        connected: boolean;
+        name?: string;
+        fullname?: string;
+        plan?: string;
+        email_verified?: boolean;
+        detail: string;
+      }>("/api/engines/hfspace/account"),
   },
 
   settings: {

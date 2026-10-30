@@ -13,6 +13,15 @@ def list_engines() -> list[dict]:
     return registry.list()
 
 
+@router.get("/hfspace/account")
+async def hfspace_account() -> dict:
+    engine = registry.get("hfspace")
+    account = getattr(engine, "account", None)
+    if account is None:
+        raise HTTPException(404, "محرّك Hugging Face غير مُفعَّل")
+    return await account()
+
+
 @router.get("/status")
 async def engines_status() -> list[dict]:
     return await registry.health_all()

@@ -96,6 +96,17 @@ def test_empty_error_gets_a_generic_hint() -> None:
 
 
 
+def test_account_without_token_reports_anonymous(monkeypatch) -> None:
+    import asyncio
+
+    monkeypatch.delenv("HF_TOKEN", raising=False)
+    engine = HFSpaceEngine("Lightricks/ltx-video-distilled", token="")
+    result = asyncio.run(engine.account())
+
+    assert result["connected"] is False
+    assert "رمز" in result["detail"]
+
+
 def test_duration_is_clamped_to_space_limits(tmp_path: Path) -> None:
     engine = HFSpaceEngine("Lightricks/ltx-video-distilled")
     short = engine._predict_args(_job(tmp_path, frames=8, fps=24))
