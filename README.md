@@ -111,6 +111,10 @@ alsrory-ai/
 | [workers/comfy/README.md](workers/comfy/README.md) | ربط ComfyUI وقوالب الـ workflows |
 | [workers/colab/alsrory_engine.ipynb](workers/colab/alsrory_engine.ipynb) | دفتر Colab/Kaggle لتشغيل محرّك مجاني |
 
+## المساهمة
+
+المساهمات مرحّب بها — كود، وثائق، ترجمة، أو تقرير خطأ. ابدأ من [`CONTRIBUTING.md`](CONTRIBUTING.md) لمعرفة قواعد الكود، الفحوصات المطلوبة قبل الـ PR، وطريقة إضافة محرّك جديد أو Workflow لـ ComfyUI.
+
 ## الرخصة
 
 AGPL-3.0 — استخدم، عدّل، وشارك بحرية. إذا قدّمت الخدمة للعامة عبر الشبكة، يجب نشر تعديلاتك.
