@@ -55,11 +55,12 @@ COMFY_TOKEN=
 COMFY_WORKFLOW=workers/comfy/workflows/text2video.json
 HF_SPACE_ID=Lightricks/ltx-video-distilled
 HF_API_NAME=/text_to_video
+HF_TOKEN=
 FFMPEG_PATH=
 ```
 
 > `DATA_DIR=data` يُفسَّر نسبةً إلى جذر المشروع، فتكون قاعدة البيانات في `data\alsrory.db`.
-> يمكنك أيضاً ضبط `COMFY_URL` و`COMFY_TOKEN` من واجهة الإعدادات دون إعادة تشغيل؛ تُحفظ في قاعدة البيانات.
+> يمكنك أيضاً ضبط `COMFY_URL` و`COMFY_TOKEN` و`HF_TOKEN` من واجهة الإعدادات دون إعادة تشغيل؛ تُحفظ في قاعدة البيانات.
 
 | المفتاح | المعنى |
 |---|---|
@@ -67,8 +68,16 @@ FFMPEG_PATH=
 | `COMFY_URL` | عنوان ComfyUI (محلي أو نفق Colab) |
 | `COMFY_TOKEN` | الرمز السري الذي يضيفه دفتر Colab |
 | `HF_SPACE_ID` | فضاء Hugging Face بلا مفتاح (افتراضياً `Lightricks/ltx-video-distilled`) — اتركه فارغاً للتعطيل |
-| `HF_API_NAME` | اسم دالة الفضاء (افتراضياً `/text_to_video`) |
+| `HF_API_NAME` | اسم دالة الفضاء للنص (افتراضياً `/text_to_video`؛ صورة→فيديو يستخدم `/image_to_video` تلقائياً) |
+| `HF_TOKEN` | اختياري: رمز حساب Hugging Face مجاني — يرفع الحصة من دقيقتين إلى 5 دقائق GPU يومياً |
 | `FFMPEG_PATH` | مسار ffmpeg.exe إن لم يكن في PATH |
+
+### حصة ZeroGPU
+
+- بلا حساب: **دقيقتان GPU يومياً** (تكفي LTX-Video لمقطع واحد لأنه يحجز 120 ثانية للطلب).
+- حساب مجاني: **5 دقائق يومياً**.
+- تُصفَّر الحصة بعد 24 ساعة من أول استخدام، والحساب واحد لكل شبكة (IP).
+- عند نفادها يظهر خطأ عربي واضح في المكتبة مع وقت عودة الحصة.
 
 ## توصيل ComfyUI محلي
 

@@ -81,6 +81,7 @@ class EngineConfigUpdate(BaseModel):
     comfy_workflow: str | None = None
     hf_space_id: str | None = None
     hf_api_name: str | None = None
+    hf_token: str | None = None
 
 
 class PromptEnhanceRequest(BaseModel):

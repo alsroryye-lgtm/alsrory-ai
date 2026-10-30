@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
 import shutil
 import threading
 import time
@@ -15,6 +16,31 @@ from .base import EngineArtifact, EngineHealth, EngineJob, EngineProgress
 DEFAULT_SPACE = "Lightricks/ltx-video-distilled"
 DEFAULT_API = "/text_to_video"
 DEFAULT_NEGATIVE = "worst quality, inconsistent motion, blurry, jittery, distorted"
+
+_ENDPOINT_BY_TYPE = {
+    "text2video": "/text_to_video",
+    "image2video": "/image_to_video",
+    "video2video": "/video_to_video",
+}
+_MODE_BY_ENDPOINT = {
+    "/text_to_video": "text-to-video",
+    "/image_to_video": "image-to-video",
+    "/video_to_video": "video-to-video",
+}
+
+# Hugging Face only hands an anonymous ZeroGPU quota to traffic that looks like
+# a same-origin browser call. Without these the Space answers instantly with
+# "404: Not Found" / "Session not found" instead of generating anything.
+_BROWSER_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    ),
+    "Accept-Language": "en-US,en;q=0.9,ar;q=0.8",
+    "Sec-Fetch-Site": "same-origin",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Dest": "empty",
+}
 
 _MIME = {
     ".mp4": "video/mp4",
@@ -45,6 +71,49 @@ class _HFJob:
 def _clamp_size(value: int) -> int:
     """LTX wants multiples of 32 within 256..1280."""
     return max(256, min(1280, int(round(value / 32.0)) * 32))
+
+
+_QUOTA_HINT = (
+    "انتهت حصة ZeroGPU المجانية لهذه الشبكة: دقيقتان يومياً بلا حساب، "
+    "و5 دقائق مع حساب Hugging Face مجاني"
+)
+
+
+def _humanize_error(exc: Exception) -> str:
+    """Turn Gradio/ZeroGPU errors into an actionable Arabic message."""
+    detail = str(exc).strip()
+    low = detail.lower()
+
+    if "zerogpu quota" in low or "exceeded your gpu quota" in low:
+        wait = ""
+        match = re.search(r"try again in ([0-9:]+)", detail, re.I)
+        if match and match.group(1) not in {"0:00:00", "00:00:00"}:
+            wait = f"، وتعود بعد {match.group(1)}"
+        return (
+            f"{_QUOTA_HINT}{wait}. أضف رمز Hugging Face مجانياً من الإعدادات "
+            "لمضاعفة الحصة، أو استخدم دفتر Colab لتوليد أكثر."
+        )
+
+    if "session not found" in low or "404: not found" in low:
+        return (
+            "رفض فضاء Hugging Face الطلب — أعد المحاولة بعد قليل، "
+            "أو اختر فضاءً آخر من الإعدادات."
+        )
+
+    if "401" in low or "unauthorized" in low or "invalid token" in low:
+        return (
+            "رمز Hugging Face غير صالح — حدّثه من الإعدادات أو أفرغه "
+            "للتوليد بلا رمز."
+        )
+
+    if not detail or type(exc).__name__ in {"CancelledError", "TimeoutError"}:
+        return (
+            "لم يصل ردّ من فضاء Hugging Face. قد تكون حصة ZeroGPU المجانية "
+            "انتهت (دقيقتان يومياً بلا حساب، 5 دقائق برمز مجاني) أو حدث انقطاع — "
+            "أعد المحاولة لاحقاً."
+        )
+
+    return detail
 
 
 class HFSpaceEngine:
@@ -81,15 +150,44 @@ class HFSpaceEngine:
             raise RuntimeError(
                 "مكتبة gradio_client غير مثبتة. شغّل: pip install -r services/api/requirements.txt"
             ) from exc
-        return Client(self.space_id, token=self.token or None, verbose=False)
+        return Client(
+            self.space_id,
+            token=self.token or None,
+            verbose=False,
+            headers=dict(_BROWSER_HEADERS),
+        )
 
-    def _predict_args(self, job: EngineJob) -> dict[str, Any]:
-        mode = "image-to-video" if job.type == "image2video" else "text-to-video"
+    def _resolve_api(self, job: EngineJob) -> str:
+        """Pick the Space endpoint that matches the job type."""
+        extra = job.params.get("extra", {}) or {}
+        explicit = str(extra.get("hf_api_name") or "").strip()
+        if explicit:
+            return explicit
+        return _ENDPOINT_BY_TYPE.get(job.type, self.api_name or DEFAULT_API)
+
+    def _predict_args(
+        self, job: EngineJob, api_name: str = DEFAULT_API
+    ) -> dict[str, Any]:
+        mode = _MODE_BY_ENDPOINT.get(api_name)
+        if mode is None:
+            mode = "image-to-video" if job.type == "image2video" else "text-to-video"
         duration = job.frames / max(1, job.fps)
+
+        input_image: Any = None
+        if job.type == "image2video" and job.image_path:
+            # Gradio expects an uploaded file handle, not a local path string:
+            # a bare string is resolved on the Space machine and fails there.
+            try:
+                from gradio_client import handle_file
+
+                input_image = handle_file(str(job.image_path))
+            except Exception:
+                input_image = str(job.image_path)
+
         return {
             "prompt": job.prompt or "a cinematic shot",
             "negative_prompt": job.negative_prompt or DEFAULT_NEGATIVE,
-            "input_image_filepath": str(job.image_path) if job.image_path else None,
+            "input_image_filepath": input_image,
             "input_video_filepath": None,
             "height_ui": _clamp_size(job.height),
             "width_ui": _clamp_size(job.width),
@@ -105,10 +203,10 @@ class HFSpaceEngine:
     def _predict(self, job: EngineJob) -> Any:
         client = self._client()
         extra = job.params.get("extra", {}) or {}
-        api_name = str(extra.get("hf_api_name") or self.api_name)
+        api_name = self._resolve_api(job)
 
-        if api_name.endswith("/text_to_video") or api_name.endswith("/image_to_video"):
-            return client.predict(api_name=api_name, **self._predict_args(job))
+        if api_name in _MODE_BY_ENDPOINT:
+            return client.predict(api_name=api_name, **self._predict_args(job, api_name))
 
         args = extra.get("hf_args") or [job.prompt, job.negative_prompt, job.seed]
         return client.predict(*args, api_name=api_name)
@@ -138,6 +236,11 @@ class HFSpaceEngine:
     def _run(self, state: _HFJob) -> None:
         job = state.job
         try:
+            if job.type == "image2video" and (
+                not job.image_path or not Path(job.image_path).exists()
+            ):
+                raise RuntimeError("اختر صورة موجودة أولاً لتوليد فيديو من صورة")
+
             state.message = "الاتصال بفضاء Hugging Face…"
             state.progress = 0.12
             result = self._predict(job)
@@ -165,7 +268,7 @@ class HFSpaceEngine:
             state.message = "اكتمل التوليد"
         except Exception as exc:
             state.state = "failed"
-            state.error = str(exc)
+            state.error = _humanize_error(exc)
             state.message = "فشل التوليد"
 
     # ------------------------------------------------------------------- engine

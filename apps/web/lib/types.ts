@@ -90,5 +90,7 @@ export type EngineSettings = {
   comfy_workflow: string;
   hf_space_id: string;
   hf_api_name: string;
+  hf_token: string;
+  hf_token_set: boolean;
   available_engines: EngineInfo[];
 };

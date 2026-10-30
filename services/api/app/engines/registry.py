@@ -37,6 +37,11 @@ class EngineRegistry:
             "hf_api_name": (
                 stored.get("hf_api_name") or settings.hf_api_name
             ),
+            "hf_token": (
+                stored.get("hf_token")
+                if stored.get("hf_token") is not None
+                else settings.hf_token
+            ),
         }
 
     def refresh(self) -> None:
@@ -51,7 +56,9 @@ class EngineRegistry:
         }
         if cfg["hf_space_id"]:
             self._engines["hfspace"] = HFSpaceEngine(
-                cfg["hf_space_id"], cfg["hf_api_name"] or DEFAULT_API
+                cfg["hf_space_id"],
+                cfg["hf_api_name"] or DEFAULT_API,
+                token=cfg["hf_token"] or "",
             )
         self.default_id = cfg["default_engine"]
         if self.default_id not in self._engines:

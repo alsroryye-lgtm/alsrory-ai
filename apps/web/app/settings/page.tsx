@@ -78,6 +78,7 @@ export default function SettingsPage() {
         comfy_workflow: settings.comfy_workflow,
         hf_space_id: settings.hf_space_id,
         hf_api_name: settings.hf_api_name,
+        hf_token: settings.hf_token,
       });
       setSettings(saved);
       setToast({ message: "حُفظت الإعدادات وأُعيد تحميل المحرّكات", kind: "ok" });
@@ -302,10 +303,28 @@ export default function SettingsPage() {
                     placeholder="/text_to_video"
                   />
                 </div>
+                <div className="field">
+                  <label className="label">
+                    رمز Hugging Face
+                    <span className="hint">اختياري</span>
+                  </label>
+                  <input
+                    className="input mono"
+                    dir="ltr"
+                    type="password"
+                    value={settings.hf_token}
+                    onChange={(event) => update("hf_token", event.target.value)}
+                    placeholder="hf_..."
+                  />
+                </div>
                 <div className="tiny muted">
                   الفضاء الافتراضي <span className="mono">Lightricks/ltx-video-distilled</span>{" "}
                   يعمل على GPU مجاني <strong>بلا أي مفتاح</strong>. يُرسل الوصف (والصورة في
-                  صورة→فيديو) إلى خدمة Hugging Face العامة، وتنطبق حصص الاستخدام المجاني.
+                  صورة→فيديو) إلى خدمة Hugging Face العامة.
+                  <br />
+                  الحصة المجانية: <strong>دقيقتان يومياً</strong> بلا حساب،
+                  و<strong>5 دقائق</strong> مع حساب Hugging Face مجاني (رمز مجاني من{" "}
+                  <span className="mono">huggingface.co/settings/tokens</span>).
                 </div>
                 <button
                   className="btn btn-sm"

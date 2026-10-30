@@ -40,16 +40,60 @@ def test_text_to_video_args(tmp_path: Path) -> None:
     assert args["height_ui"] % 32 == 0
 
 
-def test_image_to_video_passes_image_path(tmp_path: Path) -> None:
+def test_image_to_video_uses_image_endpoint(tmp_path: Path) -> None:
     image = tmp_path / "frame.png"
     image.write_bytes(b"not-a-real-png")
+    job = _job(tmp_path, type="image2video", image_path=image)
     engine = HFSpaceEngine("Lightricks/ltx-video-distilled")
-    args = engine._predict_args(
-        _job(tmp_path, type="image2video", image_path=image)
-    )
+
+    assert engine._resolve_api(job) == "/image_to_video"
+    args = engine._predict_args(job, engine._resolve_api(job))
 
     assert args["mode"] == "image-to-video"
-    assert args["input_image_filepath"] == str(image)
+    value = args["input_image_filepath"]
+    resolved = value.get("path") if isinstance(value, dict) else value
+    assert Path(resolved) == image
+
+
+def test_explicit_api_name_overrides_task_type(tmp_path: Path) -> None:
+    engine = HFSpaceEngine("Lightricks/ltx-video-distilled")
+    job = _job(tmp_path, params={"extra": {"hf_api_name": "/custom"}})
+
+    assert engine._resolve_api(job) == "/custom"
+    assert engine._resolve_api(_job(tmp_path)) == "/text_to_video"
+
+
+def test_client_sends_browser_headers() -> None:
+    from app.engines.hfspace import _BROWSER_HEADERS
+
+    assert _BROWSER_HEADERS["Sec-Fetch-Site"] == "same-origin"
+    assert _BROWSER_HEADERS["Accept-Language"]
+    assert "Mozilla" in _BROWSER_HEADERS["User-Agent"]
+
+
+def test_quota_error_is_explained_in_arabic() -> None:
+    from app.engines.hfspace import _humanize_error
+
+    message = _humanize_error(
+        RuntimeError(
+            "You have exceeded your ZeroGPU quota (120s requested vs. -60s left). "
+            "Try again in 12:30:00."
+        )
+    )
+
+    assert "ZeroGPU" in message
+    assert "12:30:00" in message
+    assert "Colab" in message
+
+
+def test_empty_error_gets_a_generic_hint() -> None:
+    import concurrent.futures
+
+    from app.engines.hfspace import _humanize_error
+
+    assert "Hugging Face" in _humanize_error(concurrent.futures.CancelledError())
+    assert _humanize_error(RuntimeError("boom")) == "boom"
+
 
 
 def test_duration_is_clamped_to_space_limits(tmp_path: Path) -> None:

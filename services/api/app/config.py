@@ -79,6 +79,7 @@ class Settings:
     )
     hf_space_id: str = os.getenv("HF_SPACE_ID", "Lightricks/ltx-video-distilled").strip()
     hf_api_name: str = os.getenv("HF_API_NAME", "/text_to_video").strip()
+    hf_token: str = os.getenv("HF_TOKEN", "").strip()
 
     # runtime-only
     ffmpeg: str | None = field(default_factory=_find_ffmpeg)

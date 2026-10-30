@@ -14,6 +14,7 @@ _MASK = "••••••••"
 def _public_config() -> dict:
     config = registry.config()
     token = config.get("comfy_token") or ""
+    hf_token = config.get("hf_token") or ""
     return {
         "default_engine": config["default_engine"],
         "comfy_url": config["comfy_url"],
@@ -22,6 +23,8 @@ def _public_config() -> dict:
         "comfy_workflow": config["comfy_workflow"],
         "hf_space_id": config["hf_space_id"] or "",
         "hf_api_name": config["hf_api_name"],
+        "hf_token_set": bool(hf_token),
+        "hf_token": _MASK if hf_token else "",
         "available_engines": registry.list(),
     }
 
@@ -36,12 +39,11 @@ def update_settings(body: EngineConfigUpdate) -> dict:
     current = get_setting("engine_config", {}) or {}
     incoming = body.model_dump(exclude_unset=True)
 
-    if "comfy_token" in incoming:
-        value = incoming.pop("comfy_token")
-        if value == _MASK:
-            pass
-        else:
-            current["comfy_token"] = value or ""
+    for key in ("comfy_token", "hf_token"):
+        if key in incoming:
+            value = incoming.pop(key)
+            if value != _MASK:
+                current[key] = value or ""
 
     for key, value in incoming.items():
         if value is None:
