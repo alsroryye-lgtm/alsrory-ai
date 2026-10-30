@@ -39,10 +39,10 @@
 </div>
 
 ```powershell
-# 1) تثبيت الأدوات المحمولة (Node + Python venv) — مرة واحدة
+# 1) Setup — تثبيت الأدوات المحمولة (Node + Python venv) مرة واحدة
 .\scripts\setup.ps1
 
-# 2) تشغيل التطبيق
+# 2) Run — تشغيل التطبيق
 .\scripts\run.ps1
 ```
 
