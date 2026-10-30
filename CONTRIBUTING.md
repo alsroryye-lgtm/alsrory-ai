@@ -108,6 +108,14 @@ cd apps/web && npm run build
 - **لا ترفع ملفات ثقيلة**: `data/`, `exports/`, `node_modules/`, `tools/` كلها في `.gitignore` — أبقِها كذلك.
 - حافظ على نمط الملفات المحيطة بك (تنسيق، أسماء، بنية imports) بدل إعادة اختراع الأسلوب.
 
+## الاعتماديات والتحديثات
+
+- **Dependabot** يفتح PRs أسبوعياً لترقيات `minor`/`patch` فقط في `apps/web` و`services/api`، ولترقيات GitHub Actions.
+- **الترقيات الكبرى (`major`) تُراجع يدوياً**: مثل Next.js 15 → 16 أو Pydantic 2 → 3 تحتاج تعديلات واختباراً كاملاً، فلا تُدمج آلياً.
+- **تحديثات الأمان** تصل تلقائياً وتتجاوز قاعدة تجاهل الإصدارات الكبرى — لا تُغلقها إلا إذا أثبتت أنها غير مؤثرة.
+- لا ترفع `node_modules/` أو `.venv/`، وحدّث `apps/web/package-lock.json` مع أي تغيير في اعتماديات الواجهة.
+- **CodeQL** يفحص JavaScript/TypeScript وPython عند كل push وPR، وأسبوعياً كل يوم اثنين.
+
 ## الفروع والرسائل والـ PR
 
 - اشتقّ فرعك من `main`: `feat/<short-name>` أو `fix/<short-name>` أو `docs/<short-name>`.
