@@ -147,6 +147,13 @@ function EditorInner() {
   const posterFor = (asset: Asset) =>
     asset.generation_id ? thumbs.get(asset.generation_id) : undefined;
 
+  // Resolve the link target from the trusted project list (not the raw <select> value),
+  // and encode it so the id can never break out of the query string.
+  const currentProject = projects.find((project) => project.id === projectId) ?? null;
+  const studioHref = currentProject
+    ? `/studio?project=${encodeURIComponent(currentProject.id)}`
+    : "/studio";
+
   const doExport = async () => {
     if (!clips.length) {
       setToast({ message: "أضف مقطعاً واحداً على الأقل", kind: "err" });
@@ -196,7 +203,7 @@ function EditorInner() {
               </option>
             ))}
           </select>
-          <Link href={projectId ? `/studio?project=${projectId}` : "/studio"} className="btn">
+          <Link href={studioHref} className="btn">
             <PlusIcon size={16} />
             مشهد جديد
           </Link>
